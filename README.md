@@ -1,0 +1,2 @@
+A lightweight Employee Management System built with Python (FastAPI), PostgreSQL, Jinja2 Templates, and Session-based Authentication.
+This project demonstrates a production-ready architecture for user registration, login, role-based access, and complete employee CRUD operations.

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    {% include 'includes/head.html' %}
+    <title>Emps - Dashboard</title>
+  </head>
+
+  <body class="m-0 font-sans antialiased font-normal text-base leading-default bg-gray-50 text-slate-500">
+    {% include 'includes/sidebar.html' %}
+
+    <main class="ease-soft-in-out xl:ml-68.5 relative h-full max-h-screen rounded-xl transition-all duration-200">
+      <!-- Navbar -->
+      {% include 'includes/header_login.html' %}
+      <!-- end Navbar -->
+
+      <!-- cards -->
+      <div class="w-full px-6 py-6 mx-auto">
+        <div class="border-black/12.5 shadow-soft-xl relative flex min-w-0 flex-col break-words rounded-2xl border-0 border-solid bg-white bg-clip-border">
+            <div class="border-black/12.5 mb-0 rounded-t-2xl border-b-0 border-solid bg-white p-6 pb-0">
+                <div class="flex flex-wrap mt-0 -mx-3">
+                  <div class="flex-none w-7/12 max-w-full px-3 mt-0 lg:w-1/2 lg:flex-none">
+                    <h6>Daily Quotes</h6>
+                    <p class="mb-0 leading-normal text-sm"> <i class="fa fa-check text-cyan-500"></i> <span class="ml-1 font-semibold">{{ todays_date }}</span></p>
+                  </div>
+                </div>
+            </div>
+            <div class="flex-auto p-6 px-0 pb-2">
+                <div class="overflow-x-auto">
+                    <table class="items-center w-full mb-0 align-top border-gray-200 text-slate-500">
+                        <thead class="align-bottom">
+                            <tr>
+                                <th class="px-6 py-3 font-bold tracking-normal text-left uppercase align-middle bg-transparent border-b letter border-b-solid text-xxs whitespace-nowrap border-b-gray-200 text-slate-400 opacity-70"> Quotes </th>
+                                <th class="px-6 py-3 font-bold tracking-normal text-center uppercase align-middle bg-transparent border-b letter border-b-solid text-xxs whitespace-nowrap border-b-gray-200 text-slate-400 opacity-70"> Author </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td
+                            class="p-2 align-middle bg-transparent border-b whitespace-nowrap">
+                            <div class="flex px-2 py-1">
+                                <div>
+                                <i class="fa fa-thumbs-o-up" style="font-size:15px;color:red"></i>&nbsp;&nbsp;
+                                </div>
+                                <div class="flex flex-col justify-center">
+                                <h6 class="mb-0 leading-normal text-sm">{{ quote }}
+                                </h6>
+                                </div>
+                            </div>
+                            </td>
+                            
+                            <td
+                            class="p-2 leading-normal text-center align-middle bg-transparent border-b text-sm whitespace-nowrap">
+                            <span class="font-semibold leading-tight text-xs">
+                                {{ author }}
+                            </span>
+                            </td>
+                            
+                        </tr>
+                        
+                        </tbody>
+                    </table>
+                </div>
+              </div>
+            </div>
+            <!-- row 1 -->
+        </main>
+  </body>
+ 
+  <!-- github button -->
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+  {% include 'includes/footer_include.html' %}
+</html>

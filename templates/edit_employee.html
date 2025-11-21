@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    {% include 'includes/head.html' %}
+    <title>Emps - Update Employee</title>
+  </head>
+
+  <body class="m-0 font-sans antialiased font-normal text-base leading-default bg-gray-50 text-slate-500">
+    {% include 'includes/sidebar.html' %}
+
+    <main class="ease-soft-in-out xl:ml-68.5 relative h-full max-h-screen rounded-xl transition-all duration-200">
+      <!-- Navbar -->
+      {% include 'includes/header_login.html' %}
+      <!-- end Navbar -->
+
+      <!-- cards -->
+      <div class="w-full px-6 py-6 mx-auto">
+        <div class="border-black/12.5 shadow-soft-xl relative flex min-w-0 flex-col break-words rounded-2xl border-0 border-solid bg-white bg-clip-border">
+            <div class="border-black/12.5 mb-0 rounded-t-2xl border-b-0 border-solid bg-white p-6 pb-0">
+                <div class="flex flex-wrap mt-0 -mx-3">
+                  <div class="flex-none w-7/12 max-w-full px-3 mt-0 lg:w-1/2 lg:flex-none">
+                    <h6>Update Employee Data </h6>
+                    {% if message %}<p style="color: green;">{{ message }}</p>{% endif %}
+                  </div>
+                </div>
+            </div>
+            <div class="flex-auto p-6 px-0 pb-2">
+                <div class="overflow-x-auto">
+                    <div class="relative z-0 flex flex-col min-w-0 break-words bg-white border-0 shadow-soft-xl rounded-2xl bg-clip-border">
+                        <div class="flex-auto p-6">
+                            <form method="post" action="/employee/update" role="form text-left">
+                                <input type="hidden" name="id" value="{{ emp.id }}">
+                                <div class="flex flex-wrap -mx-3">
+                                    <div class="max-w-full px-3 mb-6 md:mb-0 md:w-1/2 md:flex-none">
+                                        <div class="mb-4">
+                                            <input type="text" value="{{ user.full_name }}" class="text-sm focus:shadow-soft-primary-outline leading-5.6 ease-soft block w-full appearance-none rounded-lg border border-solid border-gray-300 bg-white bg-clip-padding py-2 px-3 font-normal text-gray-700 transition-all focus:border-fuchsia-300 focus:bg-white focus:text-gray-700 focus:outline-none focus:transition-shadow" placeholder="Full Name" aria-label="Full Name" name="full_name" aria-describedby="email-addon" required/>
+                                        </div>
+                                        <div class="mb-4">
+                                            <input type="date" name="dob" value="{{ emp.dob }}" class="text-sm focus:shadow-soft-primary-outline leading-5.6 ease-soft block w-full appearance-none rounded-lg border border-solid border-gray-300 bg-white bg-clip-padding py-2 px-3 font-normal text-gray-700 transition-all focus:border-fuchsia-300 focus:bg-white focus:text-gray-700 focus:outline-none focus:transition-shadow" placeholder="dob" aria-label="dob" aria-describedby="dob-addon" required readonly/>
+                                        </div>
+                                        <div class="mb-4">
+                                            <select name="dept" class="text-sm focus:shadow-soft-primary-outline leading-5.6 ease-soft block w-full appearance-none rounded-lg border border-solid border-gray-300 bg-white bg-clip-padding py-2 px-3 font-normal text-gray-700 transition-all focus:border-fuchsia-300 focus:bg-white focus:text-gray-700 focus:outline-none focus:transition-shadow" placeholder="Department" aria-label="Department" aria-describedby="Department" required>
+                                                <option value=""></option>
+                                                <option value="operation" {{ "selected" if emp.department == "operation" else "" }}>Operations</option>
+                                                <option value="support" {{ "selected" if emp.department == "support" else "" }}>Support</option>
+                                                <option value="technology" {{ "selected" if emp.department == "technology" else "" }}>Technology</option>
+                                                <option value="hr_admin" {{ "selected" if emp.department == "hr_admin" else "" }}>Hr & Admin</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-4">
+                                            <select name="designation" class="text-sm focus:shadow-soft-primary-outline leading-5.6 ease-soft block w-full appearance-none rounded-lg border border-solid border-gray-300 bg-white bg-clip-padding py-2 px-3 font-normal text-gray-700 transition-all focus:border-fuchsia-300 focus:bg-white focus:text-gray-700 focus:outline-none focus:transition-shadow" placeholder="Designation" aria-label="Designation" aria-describedby="Designation" required>
+                                                <option value=""></option>
+                                                <option value="E-commerce executive" {{ "selected" if emp.designation == "E-commerce executive" else "" }}>E-commerce executive</option>
+                                                <option value="Software Engineer" {{ "selected" if emp.designation == "Software Engineer" else "" }}>Software Engineer</option>
+                                                <option value="Consultant" {{ "selected" if emp.designation == "Consultant" else "" }}>Consultant</option>
+                                                <option value="Trainee" {{ "selected" if emp.designation == "Trainee" else "" }}>Trainee</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="max-w-full px-3 md:w-1/2 md:flex-none">
+                                        <!-- <div class="mb-4">
+                                            <input type="email" name="email" class="text-sm focus:shadow-soft-primary-outline leading-5.6 ease-soft block w-full appearance-none rounded-lg border border-solid border-gray-300 bg-white bg-clip-padding py-2 px-3 font-normal text-gray-700 transition-all focus:border-fuchsia-300 focus:bg-white focus:text-gray-700 focus:outline-none focus:transition-shadow" placeholder="Email" aria-label="Email" aria-describedby="email-addon" required/>
+                                        </div> -->
+                                        <div class="mb-4">
+                                            <input type="number" value="{{ emp.phone }}" name="mobile" class="text-sm focus:shadow-soft-primary-outline leading-5.6 ease-soft block w-full appearance-none rounded-lg border border-solid border-gray-300 bg-white bg-clip-padding py-2 px-3 font-normal text-gray-700 transition-all focus:border-fuchsia-300 focus:bg-white focus:text-gray-700 focus:outline-none focus:transition-shadow" placeholder="Mobile" aria-label="Mobile" required/>
+                                        </div>
+                                        <div class="mb-4">
+                                            <input type="number" name="salary" value="{{ emp.salary }}" class="text-sm focus:shadow-soft-primary-outline leading-5.6 ease-soft block w-full appearance-none rounded-lg border border-solid border-gray-300 bg-white bg-clip-padding py-2 px-3 font-normal text-gray-700 transition-all focus:border-fuchsia-300 focus:bg-white focus:text-gray-700 focus:outline-none focus:transition-shadow" placeholder="Salary" aria-label="Salary" required/>
+                                        </div>
+                                        <div class="mb-4">
+                                            <input type="date" value="{{ emp.hire_date }}" name="joining_date" class="text-sm focus:shadow-soft-primary-outline leading-5.6 ease-soft block w-full appearance-none rounded-lg border border-solid border-gray-300 bg-white bg-clip-padding py-2 px-3 font-normal text-gray-700 transition-all focus:border-fuchsia-300 focus:bg-white focus:text-gray-700 focus:outline-none focus:transition-shadow" placeholder="Joining Date" aria-label="Joining Date" aria-describedby="joining-addon" required/>
+                                        </div>
+                                    </div>
+                                </div>                            
+                            <div class="text-center">
+                                <button type="submit" class="inline-block w-full px-6 py-3 mt-6 mb-2 font-bold text-center text-white uppercase align-middle transition-all bg-transparent border-0 rounded-lg cursor-pointer active:opacity-85 hover:scale-102 hover:shadow-soft-xs leading-pro text-xs ease-soft-in tracking-tight-soft shadow-soft-md bg-150 bg-x-25 bg-gradient-to-tl from-gray-900 to-slate-800 hover:border-slate-700 hover:bg-slate-700 hover:text-white"> Update </button>
+                            </div>
+                                
+                            </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- row 1 -->
+    </main>
+  </body>
+ 
+  <!-- github button -->
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+  {% include 'includes/footer_include.html' %}
+</html>
