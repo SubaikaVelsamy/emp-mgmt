@@ -4,8 +4,10 @@ from starlette.middleware.sessions import SessionMiddleware
 from fastapi.templating import Jinja2Templates
 from auth.router import router as auth_router
 from utils import  STATIC_PATHS
+from middleware.auth_middleware import UserRoleMiddleware
 
 app = FastAPI()
+app.add_middleware(UserRoleMiddleware)
 
 # Mount static folder
 app.mount("/static", StaticFiles(directory="static"), name="static")

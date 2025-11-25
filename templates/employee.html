@@ -3,102 +3,166 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     {% include 'includes/head.html' %}
     <title>Emps - Employee</title>
+
+    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- DataTables -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    <!-- Bootstrap CSS (IMPORTANT!) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <style type="text/css">
+      a {
+        text-decoration: none;
+        color: inherit;
+      }
+    </style>
   </head>
 
   <body class="m-0 font-sans antialiased font-normal text-base leading-default bg-gray-50 text-slate-500">
+
     {% include 'includes/sidebar.html' %}
 
     <main class="ease-soft-in-out xl:ml-68.5 relative h-full max-h-screen rounded-xl transition-all duration-200">
-      <!-- Navbar -->
-      {% include 'includes/header_login.html' %}
-      <!-- end Navbar -->
 
-      <!-- cards -->
+      {% include 'includes/header_login.html' %}
+
       <div class="w-full px-6 py-6 mx-auto">
-        <div class="border-black/12.5 shadow-soft-xl relative flex min-w-0 flex-col break-words rounded-2xl border-0 border-solid bg-white bg-clip-border">
-            <div class="border-black/12.5 mb-0 rounded-t-2xl border-b-0 border-solid bg-white p-6 pb-0">
-                <div class="flex flex-wrap mt-0 -mx-3">
-                  <div class="flex-none w-7/12 max-w-full px-3 mt-0 lg:w-1/2 lg:flex-none">
-                    <h6>Employee Data <a class="btn" href="/add_employee"><i class="fa fa-plus" style="font-size: 15px;color: cadetblue;"></i></a></h6>
-                  </div>
-                </div>
-            </div>
-            <div class="flex-auto p-6 px-0 pb-2">
-                <div class="overflow-x-auto" style="margin-left:3%;margin-right: 3%;">
-                    <table id="employee_tbl" class="items-center w-full mb-0 align-top border-gray-200 text-slate-500">
-                        <thead class="align-bottom">
-                            <tr>
-                                <th class="px-6 py-3 font-bold tracking-normal text-center uppercase align-middle bg-transparent border-b letter border-b-solid text-xxs whitespace-nowrap border-b-gray-200 text-slate-400 opacity-70"> Full Name </th>
-                                <th class="px-6 py-3 font-bold tracking-normal text-center uppercase align-middle bg-transparent border-b letter border-b-solid text-xxs whitespace-nowrap border-b-gray-200 text-slate-400 opacity-70"> Email </th>
-                                <th class="px-6 py-3 font-bold tracking-normal text-center uppercase align-middle bg-transparent border-b letter border-b-solid text-xxs whitespace-nowrap border-b-gray-200 text-slate-400 opacity-70"> Phone </th>
-                                <th class="px-6 py-3 font-bold tracking-normal text-center uppercase align-middle bg-transparent border-b letter border-b-solid text-xxs whitespace-nowrap border-b-gray-200 text-slate-400 opacity-70"> Department </th>
-                                <th class="px-6 py-3 font-bold tracking-normal text-center uppercase align-middle bg-transparent border-b letter border-b-solid text-xxs whitespace-nowrap border-b-gray-200 text-slate-400 opacity-70"> Designation </th>
-                                <th class="px-6 py-3 font-bold tracking-normal text-center uppercase align-middle bg-transparent border-b letter border-b-solid text-xxs whitespace-nowrap border-b-gray-200 text-slate-400 opacity-70"> Salary</th>
-                                <th class="px-6 py-3 font-bold tracking-normal text-center uppercase align-middle bg-transparent border-b letter border-b-solid text-xxs whitespace-nowrap border-b-gray-200 text-slate-400 opacity-70"> Hire Date </th>
-                                <th class="px-6 py-3 font-bold tracking-normal text-center uppercase align-middle bg-transparent border-b letter border-b-solid text-xxs whitespace-nowrap border-b-gray-200 text-slate-400 opacity-70"> Action </th>
-                            </tr>
-                        </thead>
-                    </table>
-                </div>
+        <div class="shadow-soft-xl relative flex min-w-0 flex-col break-words rounded-2xl bg-white">
+
+          <div class="p-6 pb-0">
+            <div class="flex flex-wrap mt-0 -mx-3">
+              <div class="flex-none w-7/12 px-3">
+                <h6>
+                  Employee Data  
+                  <a class="btn" href="/add_employee">
+                    <i class="fa fa-plus" style="font-size: 15px;color: cadetblue;"></i>
+                  </a>
+                </h6>
               </div>
             </div>
-            <!-- row 1 -->
-        </main>
-  </body>
- 
-  <!-- github button -->
-  <script async defer src="https://buttons.github.io/buttons.js"></script>
-  {% include 'includes/footer_include.html' %}
-  <script>
-    $(document).ready(function () {
-        $('#employee_tbl').DataTable({
-            processing: true,
-            serverSide: false,  // TRUE only if you want server pagination
-            ajax: {
-                url: "/employee/data",
-                type: "GET",
-                dataSrc: "data"
-            },
-            columns: [
-                { data: "full_name" },
-                { data: "email" },
-                { data: "phone" },
-                { data: "department" },
-                { data: "designation" },
-                { data: "salary" },
-                { data: "hire_date" },
-                { data: "action" }
-            ],
-            responsive: true,
-            pageLength: 10
-        });
-    });
-    $(document).on("click", ".updateStatus", function () {
-      let empId = $(this).data("id");
+          </div>
 
-      $.ajax({
-          url: "/employee/update-status",
-          type: "POST",
-          data: { id: empId },
-          success: function (response) {
-              if (response.status === 200) {
-                  let alert_msg = '';
-                  if(response.new_status == 'N') alert_msg = 'Employee Account Deactivated';
-                  else alert_msg = 'Employee Account Activated';
-                  alert(alert_msg);
-                  $('#employee_tbl').DataTable().ajax.reload();  // Refresh table
-              } else {
-                  alert("Something went wrong");
-              }
+          <div class="flex-auto p-6 px-0 pb-2">
+            <div class="overflow-x-auto" style="margin-left:3%;margin-right: 3%;">
+
+              <table id="employee_tbl" class="items-center w-full mb-0 align-top">
+                <thead>
+                  <tr>
+                    <th class="px-3 py-3 text-center">Full Name</th>
+                    <th class="px-3 py-3 text-center">Email</th>
+                    <th class="px-3 py-3 text-center">Phone</th>
+                    <th class="px-3 py-3 text-center">Department</th>
+                    <th class="px-3 py-3 text-center">Designation</th>
+                    <th class="px-3 py-3 text-center">Salary</th>
+                    <th class="px-3 py-3 text-center">Hire Date</th>
+                    <th class="px-3 py-3 text-center">Action</th>
+                  </tr>
+                </thead>
+              </table>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Normal Bootstrap Modal -->
+    <div class="modal fade" id="idProofModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">ID Proof Preview</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body" id="idProofContent"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap buttons -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+    {% include 'includes/footer_include.html' %}
+
+    <script>
+
+      // ⭐ PREVIEW FUNCTION (fixed file path)
+      function loadIDProof(fileName) {
+          let ext = fileName.split('.').pop().toLowerCase();
+          let fileUrl = `/static/uploads/idproofs/${fileName}`;
+
+          let html = "";
+
+          if (ext === "pdf") {
+              html = `<iframe src="${fileUrl}" width="100%" height="500px"></iframe>`;
+          } else {
+              html = `<img src="${fileUrl}" class="img-fluid rounded" />`;
           }
-      });
-  });
-  
-  </script>
 
+          document.getElementById("idProofContent").innerHTML = html;
+      }
+
+      // ⭐ DATATABLE INITIALIZATION
+      $(document).ready(function () {
+
+          $('#employee_tbl').DataTable({
+              processing: true,
+              serverSide: false,
+              ajax: {
+                  url: "/employee/data",
+                  type: "GET",
+                  dataSrc: "data"
+              },
+              columns: [
+                  { data: "full_name" },
+                  { data: "email" },
+                  { data: "phone" },
+                  { data: "department" },
+                  { data: "designation" },
+                  { data: "salary" },
+                  { data: "hire_date" },
+                  { data: "action" }
+              ],
+              responsive: true,
+              pageLength: 10
+          });
+
+      });
+
+      // ⭐ UPDATE STATUS CLICK EVENT
+      $(document).on("click", ".updateStatus", function () {
+          let empId = $(this).data("id");
+
+          $.ajax({
+              url: "/employee/update-status",
+              type: "POST",
+              data: { id: empId },
+              success: function (response) {
+                  if (response.status === 200) {
+                      alert(response.new_status === 'N'
+                        ? 'Employee Account Deactivated'
+                        : 'Employee Account Activated');
+
+                      $('#employee_tbl').DataTable().ajax.reload();
+                  } else {
+                      alert("Something went wrong");
+                  }
+              }
+          });
+      });
+
+    </script>
+
+</body>
 </html>

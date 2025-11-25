@@ -12,7 +12,7 @@
             </div>
             <ul class="flex flex-row justify-end pl-0 mb-0 list-none md-max:w-full">
               <li class="flex items-center">
-                <a href="/logout" class="block px-0 py-2 font-semibold transition-all ease-nav-brand text-sm text-slate-500"> <i class="fa fa-user sm:mr-1"></i> <span class="hidden sm:inline">logout</span> </a>
+                <a href="/logout" class="block px-0 py-2 font-semibold transition-all ease-nav-brand text-sm text-slate-500"> <i class="fa fa-user sm:mr-1"></i> <span class="hidden sm:inline">logout</span> </a> | {{request.state.current_user.email}}
               </li>
             </ul>
         </div>

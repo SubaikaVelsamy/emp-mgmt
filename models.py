@@ -7,6 +7,7 @@ class UserRole(str, enum.Enum):
     Admin = "Admin"
     SuperAdmin = "Super Admin"
     Employee = "Employee"
+    Support = "Support"
 
 class StatusEnum(str, enum.Enum):
     Y = "Y"
@@ -40,6 +41,7 @@ class Employee(Base):
     hire_date = Column(Date, nullable=False)
     status = Column(Enum(StatusEnum, name="status_enum"), default=StatusEnum.Y)
     dob = Column(Date, nullable=False)
+    id_proof = Column(String, nullable=False)
 
     # user_id is just an INTEGER column — NOT a foreign key
     user_id = Column( Integer, ForeignKey( "users.id", name="fk_user_employee", deferrable=True, initially="DEFERRED", use_alter=True ), nullable=False )
