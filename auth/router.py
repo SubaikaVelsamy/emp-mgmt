@@ -1,19 +1,39 @@
-from fastapi import APIRouter, Request, Form, Depends, status, UploadFile, HTTPException
+from fastapi import APIRouter, Request, Form, Depends, status, UploadFile, HTTPException, FastAPI
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, StreamingResponse
 from sqlalchemy.orm import Session
-from database import get_db
+from database import get_db, get_all_employees  
 from models import User, UserRole, Employee, StatusEnum
-from utils import hash_password, verify_password, STATIC_PATHS, get_daily_quote, require_roles, get_current_user, ALLOWED_CONTENT_TYPES, MAX_FILE_SIZE
+from utils import hash_password, verify_password, STATIC_PATHS, get_daily_quote, require_roles, get_current_user, ALLOWED_CONTENT_TYPES, MAX_FILE_SIZE, money, breakup_salary, generate_pdf, create_audit_log, ask_chatgpt
 from datetime import date
 import os
 import uuid
+from decimal import Decimal
+from io import BytesIO
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
+from sqlalchemy.exc import SQLAlchemyError
+import traceback
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+import openai
+from openai import OpenAIError, RateLimitError
+from fastapi_cache import FastAPICache
+from fastapi_cache.decorator import cache
+from redis import asyncio as aioredis
+
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 static_paths = STATIC_PATHS
 quote, author = get_daily_quote()
 today = date.today()
+
+
+class ChatRequest(BaseModel):
+    question: str
 
 @router.get("/register")
 async def register_page(request: Request):
@@ -53,6 +73,9 @@ def register(
     db: Session = Depends(get_db)
 ):
     try:
+        existing_user = db.query(User).filter(User.email == email).first()
+        if existing_user:
+            raise HTTPException(status_code=400, detail=f"User with email {email} already exists.")
         role_enum = UserRole(role.strip())
     except ValueError:
         return {"error": "Invalid role selected."}
@@ -86,6 +109,7 @@ async def users_page(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse( "users.html", { "request": request, **static_paths} )
 
 @router.get("/users/data")
+@cache(expire=120)
 def users_data(db: Session = Depends(get_db)):
     data = (
         db.query(User).all()
@@ -113,12 +137,23 @@ def users_data(db: Session = Depends(get_db)):
     return {"data": rows}
     
 @router.get("/employee/data")
-def employee_data(db: Session = Depends(get_db)):
-    data = (
+@cache(expire=120)
+def employee_data(request:Request, db: Session = Depends(get_db)):
+    role = request.session.get('role')
+    user_id = request.session.get('user_id')
+    if role == 'Employee':
+        emp_user  = (
         db.query(Employee, User)
         .join(User, Employee.user_id == User.id)
-        .all()
+        .filter(Employee.user_id == user_id).first()
     )
+        data = [emp_user] if emp_user else []  
+    else:
+        data = (
+            db.query(Employee, User)
+            .join(User, Employee.user_id == User.id)
+            .all()
+        )
 
     rows = []
     for emp, usr in data:
@@ -135,6 +170,22 @@ def employee_data(db: Session = Depends(get_db)):
         else:
             preview_icon = ""
 
+        if emp.salary:
+            salary_icon = f"""
+                <a class='btn btn-sm btn-primary' href='/salary-slip/{emp.id}'>
+                    <i class='fa fa-download'></i>
+                </a>
+            """
+        else:
+            salary_icon = ""
+
+        if role == 'Employee':
+            status_icon = ""
+            edit_icon = ""
+        else:
+            edit_icon ="<a class='btn btn-sm btn-primary' href='/employee/edit/{emp.id}'><i class='fa fa-edit' ></i> </a>"
+            status_icon = "<button class='btn btn-sm btn-warning updateStatus' data-id='{emp.id}'><i class='fa fa-refresh' style='color:{icon_color};'></i></button>"
+
 
         rows.append({
             "id": emp.id,
@@ -145,14 +196,11 @@ def employee_data(db: Session = Depends(get_db)):
             "designation": emp.designation,
             "salary": str(emp.salary),
             "hire_date": emp.hire_date.strftime("%Y-%m-%d"),
+            "salary_slip": {salary_icon},
             "action": f"""
-            <a class='btn btn-sm btn-primary' href='/employee/edit/{emp.id}'>
-                <i class='fa fa-edit' ></i>
-            </a>
+            {edit_icon}
             &nbsp;
-            <button class='btn btn-sm btn-warning updateStatus' data-id='{emp.id}'>
-                <i class='fa fa-refresh' style='color:{icon_color};'></i>
-            </button>
+            {status_icon}
             &nbsp;
             <a class='btn btn-sm btn-primary' href='/employee/upload_ids/{emp.id}'>
                 <i class='fa fa-upload' ></i>
@@ -322,7 +370,9 @@ async def update_user_status(id: int = Form(...), db: Session = Depends(get_db))
 @router.get("/add_employee")
 async def add_employee(request: Request, message: str = None,user=Depends(require_roles("Admin", "Super Admin"))):
     if request.session.get("user_id"):
-        return templates.TemplateResponse("add_employee.html", {"request": request,**static_paths,"quote": quote,"author": author,"message": message,})
+        error = request.query_params.get("error")
+        success = request.query_params.get("success")
+        return templates.TemplateResponse("add_employee.html", {"request": request,**static_paths,"quote": quote,"author": author,"error": error,"success": success})
     return templates.TemplateResponse("login.html", {"request": request,**static_paths,"status":400})
 
 @router.post("/save_employee")
@@ -338,22 +388,39 @@ def save_employee(
     joining_date: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    
+    existing_user = db.query(User).filter(User.email == email).first()
+    if existing_user:
+        url = "/add_employee?error=Already Registered!"
+        return RedirectResponse(url=url, status_code=303) 
+            
     hashed_pw = hash_password(dob)
     new_user = User(full_name=full_name, email=email, password=hashed_pw, role='Employee')
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
     user_id = new_user.id
-
+    
     new_employee = Employee(phone=mobile, department=dept, designation=designation, salary=salary, hire_date=joining_date,dob=dob, user_id=user_id)
     db.add(new_employee)     
-    db.commit()              
+    db.commit()  
+
+    create_audit_log(
+            db=db,
+            user_id=request.session.get("user_id"),
+            action="CREATE",
+            module="EMPLOYEE",
+            record_id = new_employee.id,
+            old_data=None,
+            new_data={"employee_id": new_employee.id, "name": new_user.full_name},
+            request=request
+        )
+                
     db.refresh(new_employee) 
 
     url = "/add_employee?message=Employee%20added%20successfully!"
-    return RedirectResponse(url=url, status_code=303)
+    return RedirectResponse(url=url, status_code=303) 
     #return templates.TemplateResponse("add_employee.html", {"request": request, **static_paths,"message": "Employeem added successful!"})
+
 
 @router.get("/user/edit/{user_id}")
 async def edit_user_page(user_id: int, request: Request, db: Session = Depends(get_db)):
@@ -393,3 +460,54 @@ async def add_user(request: Request, message: str = None,user=Depends(require_ro
     if request.session.get("user_id"):
         return templates.TemplateResponse("add_user.html", {"request": request,**static_paths,"message": message,})
     return templates.TemplateResponse("login.html", {"request": request,**static_paths,"status":400})
+
+
+@router.get("/salary-slip/{employee_id}")
+def salary_slip(employee_id: int, db: Session = Depends(get_db)):
+    result = (db.query(Employee, User).join(User, Employee.user_id == User.id).filter(Employee.id == employee_id).first())
+
+    if not result:
+        raise HTTPException(404, "Employee not found")
+    
+    emp, user = result
+
+    if emp.salary is None:
+        raise HTTPException(400, "Salary not set for this employee")
+
+    breakup = breakup_salary(Decimal(emp.salary))
+    pdf = generate_pdf(emp,user, breakup)
+
+    headers = {
+        "Content-Disposition": f'attachment; filename="salary_slip_{user.full_name}.pdf"'
+    }
+    return StreamingResponse(pdf, media_type="application/pdf", headers=headers)
+
+@router.get("/hr-chat")
+def hr_chat_page(request: Request):
+    if request.session.get("user_id"):
+        return templates.TemplateResponse("hr_chat.html", {"request": request,**static_paths})
+    return templates.TemplateResponse("login.html", {"request": request,**static_paths,"status":400})
+
+@router.post("/chat/")
+def chat_with_hr(request: ChatRequest, db: Session = Depends(get_db)):
+    try:
+        # Fetch employees from DB
+        employees = get_all_employees(db)  # list of dicts with full_name, designation, etc.
+
+        # Convert employee data to readable text
+        employee_text = "\n".join(
+            [f"{e['full_name']} is a {e['designation']} in {e['department']} with salary {e['salary']}" 
+             for e in employees]
+        )
+
+        prompt = f"Here is the employee data:\n{employee_text}\n\nAnswer the following question based on this data: {request.question}"
+
+        answer = ask_chatgpt(prompt)
+        return {"answer": answer}
+
+    except RateLimitError:
+        return {"answer": "Sorry, OpenAI API quota exceeded. Please try again later."}
+    except OpenAIError as e:
+        return {"answer": f"OpenAI API error: {str(e)}"}
+    except Exception as e:
+        return {"answer": f"Unexpected error: {str(e)}"}

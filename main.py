@@ -5,8 +5,36 @@ from fastapi.templating import Jinja2Templates
 from auth.router import router as auth_router
 from utils import  STATIC_PATHS
 from middleware.auth_middleware import UserRoleMiddleware
+from contextlib import asynccontextmanager
+from redis import asyncio as aioredis
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+
+    # --- Startup ---
+    redis = aioredis.from_url(
+        "redis://localhost:6379",
+        encoding="utf-8",
+        decode_responses=True
+    )
+
+    FastAPICache.init(
+        RedisBackend(redis),
+        prefix="emp_cache"
+    )
+
+    print("✅ Redis Cache Initialized")
+
+    yield
+
+    # --- Shutdown ---
+    await redis.close()
+    print("🛑 Redis connection closed")
+
+
+app = FastAPI(lifespan=lifespan)
 app.add_middleware(UserRoleMiddleware)
 
 # Mount static folder

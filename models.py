@@ -1,7 +1,9 @@
-from sqlalchemy import Column, Integer, String, Enum,text, Numeric, Date, ForeignKey
+from sqlalchemy import Column, Integer, String, Enum,text, Numeric, Date, ForeignKey, JSON, DateTime
+from datetime import datetime
 from sqlalchemy.orm import relationship
 from database import Base
 import enum
+from sqlalchemy.dialects.postgresql import JSONB
 
 class UserRole(str, enum.Enum):
     Admin = "Admin"
@@ -46,3 +48,17 @@ class Employee(Base):
     # user_id is just an INTEGER column — NOT a foreign key
     user_id = Column( Integer, ForeignKey( "users.id", name="fk_user_employee", deferrable=True, initially="DEFERRED", use_alter=True ), nullable=False )
     user = relationship("User", back_populates="employees")
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=True)
+    action = Column(String, nullable=False)
+    table_name = Column(String, nullable=False)  # employee, login, salary, etc.
+    record_id = Column(Integer, nullable=True)
+    old_data = Column(JSONB, nullable=True)
+    new_data = Column(JSONB, nullable=True)
+    ip_address = Column(String, nullable=True)
+    user_agent = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)

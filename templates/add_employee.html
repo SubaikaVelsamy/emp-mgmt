@@ -22,7 +22,13 @@
                 <div class="flex flex-wrap mt-0 -mx-3">
                   <div class="flex-none w-7/12 max-w-full px-3 mt-0 lg:w-1/2 lg:flex-none">
                     <h6>Add Employee Data </h6>
-                    {% if message %}<p style="color: green;">{{ message }}</p>{% endif %}
+                    {% if error %}
+                        <p style="color: red;">{{ error }}</p>
+                    {% endif %}
+
+                    {% if success %}
+                        <p style="color: green;">{{ success }}</p>
+                    {% endif %}
                   </div>
                 </div>
             </div>
